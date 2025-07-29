@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Investment Portfolio Application
 
 This project is a Spring Boot application designed to manage an investment portfolio. It allows users to create, retrieve, update, and delete investment records.
@@ -70,3 +71,6 @@ investment-portfolio-app
 ## License
 
 This project is licensed under the MIT License.
+=======
+# Carteira_Web-projeto
+>>>>>>> 1c0d2953340501e45b4a7da79fb328b518205f2d
