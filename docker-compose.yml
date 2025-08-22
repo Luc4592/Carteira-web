@@ -2,27 +2,29 @@ version: '3.8'
 
 services:
   app:
-    image: investment-portfolio-app
     build:
-      context: .
+      context: ./investment-portfolio-app
       dockerfile: Dockerfile
     ports:
       - "8080:8080"
     depends_on:
       - db
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/portfolio_db
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: password
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
 
   db:
     image: postgres:latest
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: carteira
     ports:
       - "5432:5432"
-    environment:
-      POSTGRES_DB: portfolio_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
