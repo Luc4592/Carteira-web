@@ -1,0 +1,10 @@
+com\example\portfolio\controller\StockController.class
+com\example\portfolio\dto\LoginRequest.class
+com\example\portfolio\model\Investment.class
+com\example\portfolio\controller\AuthController.class
+com\example\portfolio\repository\UserRepository.class
+com\example\portfolio\model\User.class
+com\example\portfolio\repository\InvestmentRepository.class
+com\example\portfolio\controller\InvestmentController.class
+com\example\portfolio\config\WebConfig.class
+com\example\portfolio\PortfolioApplication.class

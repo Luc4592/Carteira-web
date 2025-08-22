@@ -1,4 +1,7 @@
-import org.springframework.beans.factory.annotation.Autowired;
+package com.example.portfolio.controller;
+
+import com.example.portfolio.model.Investment;
+import com.example.portfolio.repository.InvestmentRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -8,46 +11,54 @@ import java.util.List;
 @RequestMapping("/api/investments")
 public class InvestmentController {
 
-    @Autowired
-    private InvestmentRepository investmentRepository;
+    private final InvestmentRepository repository;
+
+    public InvestmentController(InvestmentRepository repository) {
+        this.repository = repository;
+    }
 
     @GetMapping
-    public List<Investment> getAllInvestments() {
-        return investmentRepository.findAll();
+    public List<Investment> getAll() {
+        return repository.findAll();
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Investment> getInvestmentById(@PathVariable Long id) {
-        return investmentRepository.findById(id)
+        return repository.findById(id)
                 .map(investment -> ResponseEntity.ok().body(investment))
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping
     public Investment createInvestment(@RequestBody Investment investment) {
-        return investmentRepository.save(investment);
+        return repository.save(investment);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<Investment> updateInvestment(@PathVariable Long id, @RequestBody Investment investmentDetails) {
-        return investmentRepository.findById(id)
+        return repository.findById(id)
                 .map(investment -> {
                     investment.setName(investmentDetails.getName());
                     investment.setAmount(investmentDetails.getAmount());
                     investment.setType(investmentDetails.getType());
-                    Investment updatedInvestment = investmentRepository.save(investment);
+                    Investment updatedInvestment = repository.save(investment);
                     return ResponseEntity.ok().body(updatedInvestment);
                 })
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteInvestment(@PathVariable Long id) {
-        return investmentRepository.findById(id)
+    public ResponseEntity<?> deleteInvestment(@PathVariable Long id) {
+        return repository.findById(id)
                 .map(investment -> {
-                    investmentRepository.delete(investment);
-                    return ResponseEntity.noContent().build();
+                    repository.delete(investment);
+                    return ResponseEntity.noContent().<Void>build();
                 })
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/")
+    public String helloWorld() {
+        return "Hello World";
     }
 }

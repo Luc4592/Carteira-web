@@ -2,6 +2,7 @@ version: '3.8'
 
 services:
   app:
+    container_name: investment-portfolio-app-app
     image: investment-portfolio-app
     build:
       context: .
@@ -16,6 +17,7 @@ services:
       SPRING_DATASOURCE_PASSWORD: password
 
   db:
+    container_name: investment-portfolio-app-db
     image: postgres:latest
     ports:
       - "5432:5432"

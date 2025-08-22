@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Detalhes da Empresa</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; }
+    .container { max-width: 500px; margin: auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 8px #ccc; }
+    h1 { color: #333; }
+    .info { margin-bottom: 15px; }
+    .back-btn { margin-top: 20px; padding: 8px 12px; cursor: pointer; }
+    .label { font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1 id="empresaNome">Empresa</h1>
+    <div class="info"><span class="label">Ticker:</span> <span id="empresaTicker"></span></div>
+    <div class="info"><span class="label">Tipo:</span> <span id="empresaTipo"></span></div>
+    <div class="info"><span class="label">Valor Atual:</span> <span id="empresaValor"></span></div>
+    <div class="info"><span class="label">Abertura:</span> <span id="empresaAbertura"></span></div>
+    <div class="info"><span class="label">Máxima do dia:</span> <span id="empresaMaxima"></span></div>
+    <div class="info"><span class="label">Mínima do dia:</span> <span id="empresaMinima"></span></div>
+    <div class="info"><span class="label">Fechamento anterior:</span> <span id="empresaFechamento"></span></div>
+    <div class="info"><span class="label">Variação:</span> <span id="empresaVariacao"></span></div>
+    <div class="info"><span class="label">Variação (%):</span> <span id="empresaVariacaoPct"></span></div>
+    <div class="info"><span class="label">Volume:</span> <span id="empresaVolume"></span></div>
+    <div class="info"><span class="label">Última atualização:</span> <span id="empresaData"></span></div>
+    <button class="back-btn" onclick="window.history.back()">Voltar</button>
+  </div>
+  <script>
+    // Mesmo dicionário de empresas do dashboard
+    const empresasInfo = {
+      PETR4: { nome: "Petrobras PN", tipo: "Petróleo" },
+      VALE3: { nome: "Vale ON", tipo: "Mineração" },
+      ITUB4: { nome: "Itaú Unibanco PN", tipo: "Financeiro" },
+      BBDC4: { nome: "Bradesco PN", tipo: "Financeiro" },
+      ABEV3: { nome: "Ambev ON", tipo: "Bebidas" },
+      B3SA3: { nome: "B3 ON", tipo: "Financeiro" },
+      BBAS3: { nome: "Banco do Brasil ON", tipo: "Financeiro" },
+      WEGE3: { nome: "WEG ON", tipo: "Indústria" },
+      PETR3: { nome: "Petrobras ON", tipo: "Petróleo" },
+      RENT3: { nome: "Localiza ON", tipo: "Serviços" },
+      ITSA4: { nome: "Itaúsa PN", tipo: "Financeiro" },
+      JBSS3: { nome: "JBS ON", tipo: "Alimentos" },
+      SUZB3: { nome: "Suzano ON", tipo: "Papel e Celulose" },
+      BRFS3: { nome: "BRF ON", tipo: "Alimentos" },
+      GGBR4: { nome: "Gerdau PN", tipo: "Siderurgia" },
+      ELET3: { nome: "Eletrobras ON", tipo: "Energia" },
+      CSNA3: { nome: "CSN ON", tipo: "Siderurgia" },
+      HAPV3: { nome: "Hapvida ON", tipo: "Saúde" },
+      LREN3: { nome: "Lojas Renner ON", tipo: "Varejo" },
+      PRIO3: { nome: "PRIO ON", tipo: "Petróleo" }
+    };
+
+    function getTickerFromURL() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('ticker') ? params.get('ticker').toUpperCase() : null;
+    }
+
+    async function fetchCotacao(ticker) {
+      try {
+        const response = await fetch(`http://localhost:8080/api/stocks/${ticker}`);
+        if (response.ok) {
+          const data = await response.json();
+          const quote = data["Global Quote"];
+          if (quote && quote["05. price"]) {
+            return {
+              valor: parseFloat(quote["05. price"]),
+              abertura: quote["02. open"],
+              maxima: quote["03. high"],
+              minima: quote["04. low"],
+              fechamento: quote["08. previous close"],
+              variacao: quote["09. change"],
+              variacaoPct: quote["10. change percent"],
+              volume: quote["06. volume"],
+              data: quote["07. latest trading day"]
+            };
+          }
+        }
+      } catch (e) {}
+      return {
+        valor: "N/A", abertura: "N/A", maxima: "N/A", minima: "N/A",
+        fechamento: "N/A", variacao: "N/A", variacaoPct: "N/A", volume: "N/A", data: "-"
+      };
+    }
+
+    async function preencherDetalhes() {
+      const ticker = getTickerFromURL();
+      if (!ticker) {
+        document.getElementById('empresaNome').innerText = "Empresa não encontrada";
+        return;
+      }
+      const info = empresasInfo[ticker] || { nome: "Desconhecido", tipo: "Desconhecido" };
+      document.getElementById('empresaNome').innerText = info.nome;
+      document.getElementById('empresaTicker').innerText = ticker;
+      document.getElementById('empresaTipo').innerText = info.tipo;
+
+      const cotacao = await fetchCotacao(ticker);
+      document.getElementById('empresaValor').innerText = cotacao.valor !== "N/A" ? "R$ " + cotacao.valor.toFixed(2) : "N/A";
+      document.getElementById('empresaAbertura').innerText = cotacao.abertura;
+      document.getElementById('empresaMaxima').innerText = cotacao.maxima;
+      document.getElementById('empresaMinima').innerText = cotacao.minima;
+      document.getElementById('empresaFechamento').innerText = cotacao.fechamento;
+      document.getElementById('empresaVariacao').innerText = cotacao.variacao;
+      document.getElementById('empresaVariacaoPct').innerText = cotacao.variacaoPct;
+      document.getElementById('empresaVolume').innerText = cotacao.volume;
+      document.getElementById('empresaData').innerText = cotacao.data;
+    }
+
+    preencherDetalhes();
+  </script>
+</body>
+</html>

@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Dashboard - Investimentos</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    h1 { color: #333; }
+    table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background-color: #f0f0f0; }
+    button { margin-top: 20px; padding: 8px 12px; cursor: pointer; }
+    #cotacaoResult { margin-top: 20px; }
+    #tickerInput { padding: 8px; width: 120px; }
+    #logoutBtn {
+      position: absolute;
+      top: 20px;
+      right: 30px;
+      margin-top: 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>Bem-vindo ao seu Dashboard de Investimentos</h1>
+  <button id="logoutBtn">Sair</button>
+
+  <h2>Buscar cotação de ação</h2>
+  <input type="text" id="tickerInput" placeholder="Ex: PETR4" />
+  <button id="buscarCotacaoBtn">Buscar Cotação</button>
+  <div id="cotacaoResult"></div>
+
+  <table id="investmentsTable">
+    <thead>
+      <tr>
+        <th>Ticker</th>
+        <th>Nome</th>
+        <th>Tipo</th>
+        <th>Valor</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- investimentos serão inseridos aqui -->
+    </tbody>
+  </table>
+
+  <button id="pdfBtn" style="width:auto; margin-bottom: 16px;">Gerar Relatório PDF</button>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.7.0/jspdf.plugin.autotable.min.js"></script>
+  <script>
+// Lista de empresas conhecidas
+const empresasInfo = {
+  PETR4: { nome: "Petrobras PN", tipo: "Petróleo" },
+  VALE3: { nome: "Vale ON", tipo: "Mineração" },
+  ITUB4: { nome: "Itaú Unibanco PN", tipo: "Financeiro" },
+  BBDC4: { nome: "Bradesco PN", tipo: "Financeiro" },
+  ABEV3: { nome: "Ambev ON", tipo: "Bebidas" },
+  B3SA3: { nome: "B3 ON", tipo: "Financeiro" },
+  BBAS3: { nome: "Banco do Brasil ON", tipo: "Financeiro" },
+  WEGE3: { nome: "WEG ON", tipo: "Indústria" },
+  PETR3: { nome: "Petrobras ON", tipo: "Petróleo" },
+  RENT3: { nome: "Localiza ON", tipo: "Serviços" },
+  ITSA4: { nome: "Itaúsa PN", tipo: "Financeiro" },
+  JBSS3: { nome: "JBS ON", tipo: "Alimentos" },
+  SUZB3: { nome: "Suzano ON", tipo: "Papel e Celulose" },
+  BRFS3: { nome: "BRF ON", tipo: "Alimentos" },
+  GGBR4: { nome: "Gerdau PN", tipo: "Siderurgia" },
+  ELET3: { nome: "Eletrobras ON", tipo: "Energia" },
+  CSNA3: { nome: "CSN ON", tipo: "Siderurgia" },
+  HAPV3: { nome: "Hapvida ON", tipo: "Saúde" },
+  LREN3: { nome: "Lojas Renner ON", tipo: "Varejo" },
+  PRIO3: { nome: "PRIO ON", tipo: "Petróleo" }
+};
+
+// Função para sortear 10 tickers aleatórios
+function getRandomTickers(empresas, quantidade) {
+  const keys = Object.keys(empresas);
+  for (let i = keys.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [keys[i], keys[j]] = [keys[j], keys[i]];
+  }
+  return keys.slice(0, quantidade);
+}
+
+async function fetchCotacao(ticker) {
+  try {
+    const response = await fetch(`http://localhost:8080/api/stocks/${ticker}`);
+    if (response.ok) {
+      const data = await response.json();
+      const quote = data["Global Quote"];
+      if (quote && quote["05. price"]) {
+        return parseFloat(quote["05. price"]);
+      }
+    }
+  } catch (e) {}
+  return "N/A";
+}
+
+async function preencherTabelaAleatoria() {
+  const tickers = getRandomTickers(empresasInfo, 10);
+  const tbody = document.querySelector('#investmentsTable tbody');
+  tbody.innerHTML = '';
+  for (const ticker of tickers) {
+    const info = empresasInfo[ticker];
+    const valor = await fetchCotacao(ticker);
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>
+        <a href="empresa.html?ticker=${ticker}" style="color:#007bff;text-decoration:underline;cursor:pointer;">
+          ${ticker}
+        </a>
+      </td>
+      <td>${info.nome}</td>
+      <td>${info.tipo}</td>
+      <td>${valor !== "N/A" ? "R$ " + valor.toFixed(2) : "N/A"}</td>
+      <td>
+        <button class="remove-btn" style="background:#ff4444;color:#fff;border:none;border-radius:4px;padding:4px 10px;cursor:pointer;font-size:16px;">-</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+
+    tr.querySelector('.remove-btn').onclick = function() {
+      tr.remove();
+    };
+  }
+}
+
+// Chame ao carregar a página
+preencherTabelaAleatoria();
+
+document.getElementById('buscarCotacaoBtn').onclick = async function() {
+  const ticker = document.getElementById('tickerInput').value.trim().toUpperCase();
+  if (!ticker) {
+    document.getElementById('cotacaoResult').innerText = 'Digite um ticker!';
+    return;
+  }
+  document.getElementById('cotacaoResult').innerText = 'Buscando...';
+  try {
+    const valor = await fetchCotacao(ticker);
+    if (valor !== "N/A") {
+      const info = empresasInfo[ticker] || { nome: "Desconhecido", tipo: "Desconhecido" };
+      const tbody = document.querySelector('#investmentsTable tbody');
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>
+          <a href="empresa.html?ticker=${ticker}" style="color:#007bff;text-decoration:underline;cursor:pointer;">
+            ${ticker}
+          </a>
+        </td>
+        <td>${info.nome}</td>
+        <td>${info.tipo}</td>
+        <td>R$ ${valor.toFixed(2)}</td>
+        <td>
+          <button class="remove-btn" style="background:#ff4444;color:#fff;border:none;border-radius:4px;padding:4px 10px;cursor:pointer;font-size:16px;">-</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+
+      tr.querySelector('.remove-btn').onclick = function() {
+        tr.remove();
+      };
+
+      document.getElementById('cotacaoResult').innerText = '';
+    } else {
+      document.getElementById('cotacaoResult').innerText = 'Ticker não encontrado ou limite da API atingido.';
+    }
+  } catch (e) {
+    document.getElementById('cotacaoResult').innerText = 'Erro de conexão com o backend.';
+  }
+};
+
+document.getElementById('logoutBtn').addEventListener('click', () => {
+  window.location.href = 'index.html';
+});
+
+document.getElementById('pdfBtn').onclick = function() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  // Cabeçalhos da tabela
+  const head = [['Ticker', 'Nome', 'Tipo', 'Valor']];
+  // Dados da tabela
+  const body = [];
+  document.querySelectorAll('#investmentsTable tbody tr').forEach(tr => {
+    const row = [];
+    tr.querySelectorAll('td').forEach((td, idx) => {
+      // Pula o botão de remover (caso exista)
+      if (idx < 4) row.push(td.innerText.trim());
+    });
+    body.push(row);
+  });
+
+  doc.text('Relatório de Empresas', 14, 14);
+  doc.autoTable({
+    head: head,
+    body: body,
+    startY: 20
+  });
+
+  doc.save('relatorio_empresas.pdf');
+};
+  </script>
+</body>
+</html>

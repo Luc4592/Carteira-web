@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Login - Carteira de Investimentos</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico"> <!-- Aqui está o favicon -->
+</head>
+<body>
+    <div class="login-container">
+        <h2>Login</h2>
+        <form id="loginForm">
+            <input type="text" id="username" placeholder="Usuário" required>
+            <input type="password" id="password" placeholder="Senha" required>
+            <button type="submit">Entrar</button>
+        </form>
+            <!-- Adicione abaixo do botão de login -->
+            <button type="button" id="registerBtn">Cadastrar novo usuário</button>
+
+        <div id="message"></div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
+<script>
+document.getElementById('registerBtn').onclick = function() {
+    window.location.href = "register.html";
+};
+</script>
